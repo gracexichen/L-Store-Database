@@ -1,8 +1,5 @@
-from datetime import datetime
-from lstore.lru import LRU
 from lstore.page import Page
 import os
-from pathlib import Path
 import pickle
 import threading
 
@@ -10,7 +7,6 @@ import threading
 class BufferPool:
     def __init__(self, path='none', capacity=1000):
         self.parent_path = path          # path where pickle metadata can be saved.
-        #self.LRU = LRU()         
         self.capacity = capacity  
         self.pool = {}           # Dictionary to store buffer pages indexed by buffer_id
         self.disk_page_count = 0
@@ -37,10 +33,6 @@ class BufferPool:
 
     def addPages(self, t_name, page, page_key, is_base=True): #should be called from table class
         # Add a new page to the buffer pool and mark it as dirty
-        #if is_base == True:
-            #print("adding a base page to pool ", page_key)
-        #else:
-            #print("adding a tail page to pool ", page_key)
         if self.capacity == 0:
             self.evict_bufferpool()
         buffer_id = self.disk_page_count
@@ -51,11 +43,6 @@ class BufferPool:
             #print(" pages currently in bufferpool: ", list(self.pool.keys()))
     
     def initPages(self, t_name, page, page_key, is_base=True): #should be called from table class
-        # Add a new page to the buffer pool and mark it as dirty
-        #if is_base == True:
-            #print("adding a base page to pool ", page_key)
-        #else:
-            #print("adding a tail page to pool ", page_key)
         with self.thread_lock:
             if self.capacity == 0:
                 self.evict_bufferpool()
