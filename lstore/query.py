@@ -59,15 +59,7 @@ class Query:
                 self.table.lock_manager.acquire_exclusive_lock(rid, t_id)
                 if (rid != 0 and rid % self.table.max_records == 0): #if there's no capacity
                     self.table.init_page_dir() #add one base page (a set of physical pages, one for each column)
-                num_pages = self.table.num_pages
-            pages_start = (num_pages+1) - (self.table.num_columns+4)
-            for i in range(self.table.num_columns):
-                self.table.bufferpool.get_page(self.table.name, i+4+pages_start, True).write(columns[i], rid)
-            self.table.bufferpool.get_page(self.table.name, pages_start, True).write(-1, rid) #indirection_column = -1 means no tail record exists
-            self.table.bufferpool.get_page(self.table.name, pages_start+1, True).write(rid, rid) #rid column
-            self.table.bufferpool.get_page(self.table.name, pages_start+2, True).write(0, rid) #time_stamp column
-            self.table.bufferpool.get_page(self.table.name, pages_start+3, True).write(0, rid) #schema_encoding column
-            self.table.index.add_index(self.table.key, columns[self.table.key], rid) # add index
+            self.table.insert_column(columns, -1, rid, 0, 0)
             for i in range(self.table.num_columns):
                 self.table.index.add_index(i, columns[i], rid)
             return True

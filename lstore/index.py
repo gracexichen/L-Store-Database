@@ -72,18 +72,19 @@ class Index:
     def create_index(self, column_number):
         # Create an index for a specific column by scanning all records
         with self.createIndex_thread_lock:
-            #print("Is this the problem: ", threading.current_thread().name)
             if self.indices[column_number] is None:
                 self.indices[column_number] = {}
                 num_records = self.table.rid
                 max_records = self.table.max_records #max_records per page
                 for i in range (num_records//max_records):
-                    page = self.table.bufferpool.get_page_copy(self.table.name, i*(4+self.table.num_columns)+(4+column_number)).copy()
+                    page_key = i*(4+self.table.num_columns)+(4+column_number)
+                    page = self.table.bufferpool.get_page_copy(self.table.name, page_key).copy()
                     for j in range(page.num_records):
                         self.add_index(column_number, page.read_val(j), i*(4+self.table.num_columns)+j)
                 if (num_records%max_records!=0):
                     i = num_records//max_records
-                    page = self.table.bufferpool.get_page_copy(self.table.name, i*(4+self.table.num_columns)+(4+column_number)).copy()
+                    page_key = i*(4+self.table.num_columns)+(4+column_number)
+                    page = self.table.bufferpool.get_page_copy(self.table.name, page_key).copy()
                     for j in range(page.num_records):
                         self.add_index(column_number, page.read_val(j), i*(4+self.table.num_columns)+j)
             return

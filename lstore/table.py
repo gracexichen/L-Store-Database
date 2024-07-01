@@ -91,6 +91,16 @@ class Table:
             self.bufferpool.initPages(self.name, page, self.num_tail_pages, False)
         pass
 
+    def insert_column(self, columns, indirection, rid, time_stamp, schema_encoding):
+        pages_start = (self.num_pages+1) - (self.num_columns+4)
+        for i in range(self.num_columns):
+            self.bufferpool.get_page(self.name, i+4+pages_start, True).write(columns[i], rid)
+        self.bufferpool.get_page(self.name, pages_start, True).write(indirection, rid) #indirection_column = -1 means no tail record exists
+        self.bufferpool.get_page(self.name, pages_start+1, True).write(rid, rid) #rid column
+        self.bufferpool.get_page(self.name, pages_start+2, True).write(time_stamp, rid) #time_stamp column
+        self.bufferpool.get_page(self.name, pages_start+3, True).write(schema_encoding, rid) #schema_encoding column
+        self.index.add_index(self.key, columns[self.key], rid) # add index
+
     def __merge(self, current_tail_record):
         # print("merge is happening...") <-- if uncommented, this will print even on the first ever update
         # tail_records = self.tail_page_directory.copy() # BUFFERPOOL FIX: obtain copies from disk of all tail records
